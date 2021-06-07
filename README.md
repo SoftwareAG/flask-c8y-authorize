@@ -15,8 +15,13 @@
   
   app = Flask(__name__)
   
-  @PreAuthorize.has_role("ROLE_TEST_READ")
-  @app.route("/test")
+  @app.route('/test')
+  @PreAuthorize.has_role('ROLE_TEST_READ')
   def test():
     return "Ok"
   ```
+
+## There are total three decorators
+* @PreAuthorize.has_role("ROLE_TEST_READ") - Validates for a specific role
+* @PreAuthorize.has_all_roles(["ROLE_TEST_READ", "ROLE_TEST_WRITE"]) - Validates for all the roles
+* @PreAuthorize.has_any_role(["ROLE_TEST_READ", "ROLE_TEST_WRITE"]) - Validates for any of the roles
