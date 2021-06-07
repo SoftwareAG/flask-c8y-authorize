@@ -6,7 +6,37 @@ from flask import request, Response
 class PreAuthorize:
 
     @classmethod
-    def has_roles(cls, roles):
+    def has_any_role(cls, roles):
+        def wrapper(func):
+            def inner(*args, **kwargs):
+                user_roles = cls.__get_current_user_roles()
+                if len(set(roles).intersection(set(user_roles)))==0:
+                    return cls.__create_response(
+                        status_code=403,
+                        content_type="application/json",
+                        message=json.dumps({"error": "You do not any of the roles - {}.".format(roles)})
+                    )
+                return func(*args, **kwargs)
+            return inner
+        return wrapper
+
+    @classmethod
+    def has_role(cls, role):
+        def wrapper(func):
+            def inner(*args, **kwargs):
+                user_roles = cls.__get_current_user_roles()
+                if role not in user_roles:
+                    return cls.__create_response(
+                        status_code=403,
+                        content_type="application/json",
+                        message=json.dumps({"error": "You do not have the role - {}.".format(role)})
+                    )
+                return func(*args, **kwargs)
+            return inner
+        return wrapper
+
+    @classmethod
+    def has_all_roles(cls, roles):
         def wrapper(func):
             def inner(*args, **kwargs):
                 user_roles = cls.__get_current_user_roles()
