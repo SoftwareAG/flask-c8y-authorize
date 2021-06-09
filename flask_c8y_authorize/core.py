@@ -17,6 +17,7 @@ class PreAuthorize:
                         message=json.dumps({"error": "You do not have any of the roles - {}.".format(roles)})
                     )
                 return func(*args, **kwargs)
+            inner.__name__ = func.__name__
             return inner
         return wrapper
 
@@ -32,6 +33,7 @@ class PreAuthorize:
                         message=json.dumps({"error": "You do not have the role - {}.".format(role)})
                     )
                 return func(*args, **kwargs)
+            inner.__name__ = func.__name__
             return inner
         return wrapper
 
@@ -47,6 +49,7 @@ class PreAuthorize:
                         message=json.dumps({"error": "You do not have all the roles - {}.".format(roles)})
                     )
                 return func(*args, **kwargs)
+            inner.__name__ = func.__name__
             return inner
         return wrapper
 
