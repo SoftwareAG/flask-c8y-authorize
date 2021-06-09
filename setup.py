@@ -3,7 +3,6 @@ setup(
 	name = "flask_c8y_authorize",
 	version = "1.0.0",
 	description = "A library that helps to add RBAC for cumulocity in a flask based application.",
-	long_description_content_type="text/markdown",
 	author = "Nirmal Borah",
 	author_email = "nirmal.borah@softwareag.com",
 	url = "https://github.com/softwareag/flask-c8y-authorize",

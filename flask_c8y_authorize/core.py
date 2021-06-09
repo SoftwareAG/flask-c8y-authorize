@@ -11,11 +11,7 @@ class PreAuthorize:
             def inner(*args, **kwargs):
                 user_roles = cls.__get_current_user_roles()
                 if len(set(roles).intersection(set(user_roles)))==0:
-                    return cls.__create_response(
-                        status_code=403,
-                        content_type="application/json",
-                        message=json.dumps({"error": "You do not have any of the roles - {}.".format(roles)})
-                    )
+                    return cls.__access_denied()
                 return func(*args, **kwargs)
             inner.__name__ = func.__name__
             return inner
@@ -27,11 +23,7 @@ class PreAuthorize:
             def inner(*args, **kwargs):
                 user_roles = cls.__get_current_user_roles()
                 if role not in user_roles:
-                    return cls.__create_response(
-                        status_code=403,
-                        content_type="application/json",
-                        message=json.dumps({"error": "You do not have the role - {}.".format(role)})
-                    )
+                    return cls.__access_denied()
                 return func(*args, **kwargs)
             inner.__name__ = func.__name__
             return inner
@@ -43,11 +35,7 @@ class PreAuthorize:
             def inner(*args, **kwargs):
                 user_roles = cls.__get_current_user_roles()
                 if len(set(roles) - set(user_roles)) > 0:
-                    return cls.__create_response(
-                        status_code=403,
-                        content_type="application/json",
-                        message=json.dumps({"error": "You do not have all the roles - {}.".format(roles)})
-                    )
+                    return cls.__access_denied()
                 return func(*args, **kwargs)
             inner.__name__ = func.__name__
             return inner
@@ -64,9 +52,9 @@ class PreAuthorize:
         return user_roles
 
     @classmethod
-    def __create_response(cls, status_code, content_type, message):
+    def __access_denied(cls):
         resp = Response()
-        resp.status_code = status_code
-        resp.set_data(message)
-        resp.content_type = content_type
+        resp.status_code = 403
+        resp.set_data(json.dumps({"error": "Access is denied"}))
+        resp.content_type = "application/json"
         return resp
