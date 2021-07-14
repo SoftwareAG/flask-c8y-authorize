@@ -1,17 +1,22 @@
 import json
 import requests
 import os
-from flask import request, Response
+from flask import request, Response, current_app
 
 class PreAuthorize:
+
+    @classmethod
+    def is_preauthorize_enabled(cls):
+        return current_app.config.get("flask_c8y_pre_authorize_enabled", True)
 
     @classmethod
     def has_any_role(cls, roles):
         def wrapper(func):
             def inner(*args, **kwargs):
-                user_roles = cls.__get_current_user_roles()
-                if len(set(roles).intersection(set(user_roles)))==0:
-                    return cls.__access_denied()
+                if cls.is_preauthorize_enabled():
+                    user_roles = cls.__get_current_user_roles()
+                    if len(set(roles).intersection(set(user_roles)))==0:
+                        return cls.__access_denied()
                 return func(*args, **kwargs)
             inner.__name__ = func.__name__
             return inner
@@ -21,9 +26,10 @@ class PreAuthorize:
     def has_role(cls, role):
         def wrapper(func):
             def inner(*args, **kwargs):
-                user_roles = cls.__get_current_user_roles()
-                if role not in user_roles:
-                    return cls.__access_denied()
+                if cls.is_preauthorize_enabled():
+                    user_roles = cls.__get_current_user_roles()
+                    if role not in user_roles:
+                        return cls.__access_denied()
                 return func(*args, **kwargs)
             inner.__name__ = func.__name__
             return inner
@@ -33,9 +39,10 @@ class PreAuthorize:
     def has_all_roles(cls, roles):
         def wrapper(func):
             def inner(*args, **kwargs):
-                user_roles = cls.__get_current_user_roles()
-                if len(set(roles) - set(user_roles)) > 0:
-                    return cls.__access_denied()
+                if cls.is_preauthorize_enabled():
+                    user_roles = cls.__get_current_user_roles()
+                    if len(set(roles) - set(user_roles)) > 0:
+                        return cls.__access_denied()
                 return func(*args, **kwargs)
             inner.__name__ = func.__name__
             return inner
