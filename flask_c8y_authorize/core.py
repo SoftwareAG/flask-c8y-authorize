@@ -1,9 +1,13 @@
 import json
+import time
 import requests
 import os
+import base64
 from flask import request, Response, current_app
 
 class PreAuthorize:
+
+    USER_ROLES = {}
 
     @classmethod
     def is_preauthorize_enabled(cls):
@@ -49,13 +53,27 @@ class PreAuthorize:
         return wrapper
 
     @classmethod
+    def __get_user(cls, auth_header):
+        auth = auth_header.split(" ")[-1]
+        username, password = base64.b64decode(auth).decode().split(":")
+        user = username.split("/", 1)[-1]
+        return user
+
+    @classmethod
     def __get_current_user_roles(cls):
         headers = {"Authorization": request.headers.get("Authorization")}
-        user_info_url = "{}/user/currentUser".format(os.getenv("C8Y_BASEURL"))
-        user_info = requests.get(user_info_url, headers=headers).json()
-        user_roles = []
-        for role in user_info["effectiveRoles"]:
-            user_roles.append(role["name"])
+        user = cls.__get_user(headers["Authorization"])
+        if (user not in cls.USER_ROLES) or \
+                (user in cls.USER_ROLES and (time.time()-cls.USER_ROLES[user]["lastAccessed"])//60 > 60):
+            user_info_url = "{}/user/currentUser".format(os.getenv("C8Y_BASEURL"))
+            user_info = requests.get(user_info_url, headers=headers).json()
+            user_roles = []
+            for role in user_info["effectiveRoles"]:
+                user_roles.append(role["name"])
+            cls.USER_ROLES[user] = {"roles": user_roles, "lastAccessed": time.time()}
+        else:
+            user_roles = cls.USER_ROLES[user]["roles"]
+            cls.USER_ROLES[user]["lastAccessed"] = time.time()
         return user_roles
 
     @classmethod
