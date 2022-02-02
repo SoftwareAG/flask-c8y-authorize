@@ -38,6 +38,8 @@ def test():
 * ```@PreAuthorize.has_all_roles(["ROLE_TEST_READ", "ROLE_TEST_WRITE"])``` - Validates for all the roles
 * ```@PreAuthorize.has_any_role(["ROLE_TEST_READ", "ROLE_TEST_WRITE"])``` - Validates for any of the roles
 
+## **Note - Currently, it supports only basic auth.**
+
 ______________________
 These tools are provided as-is and without warranty or support. They do not constitute part of the Software AG product suite. Users are free to use, fork and modify them, subject to the license agreement. While Software AG welcomes contributions, we cannot guarantee to include every contribution in the master project.
 
