@@ -72,9 +72,11 @@ class PreAuthorize:
         if (user not in cls.USER_ROLES) or \
                 (user in cls.USER_ROLES and (time.time()-cls.USER_ROLES[user]["lastAccessed"]) >= cls.cache_timeout()):
             user_info_url = "{}/user/currentUser".format(os.getenv("C8Y_BASEURL"))
-            user_info = requests.get(user_info_url, headers=headers).json()
+            user_info = requests.get(user_info_url, headers=headers)
+            if user_info.status_code != 200:
+                return cls.__access_denied()
             user_roles = []
-            for role in user_info["effectiveRoles"]:
+            for role in user_info.json()["effectiveRoles"]:
                 user_roles.append(role["name"])
             cls.USER_ROLES[user] = {"roles": user_roles, "lastAccessed": time.time()}
         else:
