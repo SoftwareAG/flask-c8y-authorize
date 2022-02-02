@@ -67,6 +67,8 @@ class PreAuthorize:
     @classmethod
     def __get_current_user_roles(cls):
         auth = request.headers.get("Authorization")
+        if not auth:
+            return
         headers = {"Authorization": auth}
         user = cls.__get_user(auth)
         if (user not in cls.USER_ROLES) or \
@@ -74,7 +76,7 @@ class PreAuthorize:
             user_info_url = "{}/user/currentUser".format(os.getenv("C8Y_BASEURL"))
             user_info = requests.get(user_info_url, headers=headers)
             if user_info.status_code != 200:
-                return None
+                return
             user_roles = []
             for role in user_info.json()["effectiveRoles"]:
                 user_roles.append(role["name"])
