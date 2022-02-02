@@ -67,10 +67,10 @@ class PreAuthorize:
     @classmethod
     def __get_current_user_roles(cls):
         auth = request.headers.get("Authorization")
-        if not auth:
+        if not auth or not auth.startswith("Basic"):
             return
-        headers = {"Authorization": auth}
         user = cls.__get_user(auth)
+        headers = {"Authorization": auth}
         if (user not in cls.USER_ROLES) or \
                 (user in cls.USER_ROLES and (time.time()-cls.USER_ROLES[user]["lastAccessed"]) >= cls.cache_timeout()):
             user_info_url = "{}/user/currentUser".format(os.getenv("C8Y_BASEURL"))
