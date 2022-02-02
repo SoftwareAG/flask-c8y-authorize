@@ -23,7 +23,7 @@ class PreAuthorize:
             def inner(*args, **kwargs):
                 if cls.is_preauthorize_enabled():
                     user_roles = cls.__get_current_user_roles()
-                    if len(set(roles).intersection(set(user_roles)))==0:
+                    if not user_roles or len(set(roles).intersection(set(user_roles)))==0:
                         return cls.__access_denied()
                 return func(*args, **kwargs)
             inner.__name__ = func.__name__
@@ -36,7 +36,7 @@ class PreAuthorize:
             def inner(*args, **kwargs):
                 if cls.is_preauthorize_enabled():
                     user_roles = cls.__get_current_user_roles()
-                    if role not in user_roles:
+                    if not user_roles or role not in user_roles:
                         return cls.__access_denied()
                 return func(*args, **kwargs)
             inner.__name__ = func.__name__
@@ -49,7 +49,7 @@ class PreAuthorize:
             def inner(*args, **kwargs):
                 if cls.is_preauthorize_enabled():
                     user_roles = cls.__get_current_user_roles()
-                    if len(set(roles) - set(user_roles)) > 0:
+                    if not user_roles or len(set(roles) - set(user_roles)) > 0:
                         return cls.__access_denied()
                 return func(*args, **kwargs)
             inner.__name__ = func.__name__
@@ -67,14 +67,16 @@ class PreAuthorize:
     @classmethod
     def __get_current_user_roles(cls):
         auth = request.headers.get("Authorization")
-        headers = {"Authorization": auth}
+        if not auth or not auth.startswith("Basic"):
+            return
         user = cls.__get_user(auth)
+        headers = {"Authorization": auth}
         if (user not in cls.USER_ROLES) or \
                 (user in cls.USER_ROLES and (time.time()-cls.USER_ROLES[user]["lastAccessed"]) >= cls.cache_timeout()):
             user_info_url = "{}/user/currentUser".format(os.getenv("C8Y_BASEURL"))
             user_info = requests.get(user_info_url, headers=headers)
             if user_info.status_code != 200:
-                return cls.__access_denied()
+                return
             user_roles = []
             for role in user_info.json()["effectiveRoles"]:
                 user_roles.append(role["name"])
