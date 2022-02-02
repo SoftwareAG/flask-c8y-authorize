@@ -14,6 +14,10 @@ class PreAuthorize:
         return current_app.config.get("flask_c8y_pre_authorize_enabled", True)
 
     @classmethod
+    def cache_timeout(cls):
+        return current_app.config.get("flask_c8y_user_roles_cache_timeout", 10)
+
+    @classmethod
     def has_any_role(cls, roles):
         def wrapper(func):
             def inner(*args, **kwargs):
@@ -54,6 +58,7 @@ class PreAuthorize:
 
     @classmethod
     def __get_user(cls, auth_header):
+        # Handles basic auth
         auth = auth_header.split(" ")[-1]
         username, password = base64.b64decode(auth).decode().split(":")
         user = username.split("/", 1)[-1]
@@ -61,10 +66,11 @@ class PreAuthorize:
 
     @classmethod
     def __get_current_user_roles(cls):
-        headers = {"Authorization": request.headers.get("Authorization")}
-        user = cls.__get_user(headers["Authorization"])
+        auth = request.headers.get("Authorization")
+        headers = {"Authorization": auth}
+        user = cls.__get_user(auth)
         if (user not in cls.USER_ROLES) or \
-                (user in cls.USER_ROLES and (time.time()-cls.USER_ROLES[user]["lastAccessed"])//60 > 60):
+                (user in cls.USER_ROLES and (time.time()-cls.USER_ROLES[user]["lastAccessed"]) >= cls.cache_timeout()):
             user_info_url = "{}/user/currentUser".format(os.getenv("C8Y_BASEURL"))
             user_info = requests.get(user_info_url, headers=headers).json()
             user_roles = []
@@ -73,7 +79,6 @@ class PreAuthorize:
             cls.USER_ROLES[user] = {"roles": user_roles, "lastAccessed": time.time()}
         else:
             user_roles = cls.USER_ROLES[user]["roles"]
-            cls.USER_ROLES[user]["lastAccessed"] = time.time()
         return user_roles
 
     @classmethod
