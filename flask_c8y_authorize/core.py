@@ -82,7 +82,7 @@ class PreAuthorize:
         if (user not in cls.USER_ROLES) or \
                 (user in cls.USER_ROLES and (time.time()-cls.USER_ROLES[user]["lastAccessed"]) >= cls.cache_timeout()):
             user_info_url = "{}/user/currentUser".format(os.getenv("C8Y_BASEURL"))
-            headers = request.headers
+            headers = dict(request.headers)
             if request.cookies.get("authorization"):
                 del headers["Authorization"]
             user_info = requests.get(user_info_url, headers=headers)
