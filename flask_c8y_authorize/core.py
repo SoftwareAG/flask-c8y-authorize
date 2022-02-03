@@ -5,7 +5,6 @@ import os
 import base64
 import jwt
 from flask import request, Response, current_app
-import logging
 
 class PreAuthorize:
 
