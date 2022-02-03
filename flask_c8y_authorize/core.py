@@ -3,6 +3,7 @@ import time
 import requests
 import os
 import base64
+import jwt
 from flask import request, Response, current_app
 
 class PreAuthorize:
@@ -57,24 +58,30 @@ class PreAuthorize:
         return wrapper
 
     @classmethod
-    def __get_user(cls, auth_header):
-        # Handles basic auth
-        auth = auth_header.split(" ")[-1]
-        username, password = base64.b64decode(auth).decode().split(":")
-        user = username.split("/", 1)[-1]
+    def __get_user(cls):
+        auth = request.headers.get("Authorization")
+        if auth:
+            auth = auth.split(" ")[-1]
+            username, password = base64.b64decode(auth).decode().split(":")
+            user = username.split("/", 1)[-1]
+        else:
+            auth = request.cookies["authorization"]
+            if not auth:
+                return
+            decoded_jwt = jwt.decode(auth, algorithms=["RS256"], options={"verify_signature":False})
+            user = decoded_jwt["sub"]
         return user
 
     @classmethod
     def __get_current_user_roles(cls):
-        auth = request.headers.get("Authorization")
-        if not auth or not auth.startswith("Basic"):
+        try:
+            user = cls.__get_user()
+        except:
             return
-        user = cls.__get_user(auth)
-        headers = {"Authorization": auth}
         if (user not in cls.USER_ROLES) or \
                 (user in cls.USER_ROLES and (time.time()-cls.USER_ROLES[user]["lastAccessed"]) >= cls.cache_timeout()):
             user_info_url = "{}/user/currentUser".format(os.getenv("C8Y_BASEURL"))
-            user_info = requests.get(user_info_url, headers=headers)
+            user_info = requests.get(user_info_url, headers=request.headers)
             if user_info.status_code != 200:
                 return
             user_roles = []

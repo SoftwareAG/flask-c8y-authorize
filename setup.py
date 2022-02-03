@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 setup(
 	name = "flask_c8y_authorize",
-	version = "1.2.0",
+	version = "1.3.0",
 	description = "A library that helps to add RBAC for cumulocity in a flask based application.",
 	author = "Nirmal Borah",
 	author_email = "nirmal.borah@softwareag.com",
@@ -19,7 +19,8 @@ setup(
 	packages = find_packages(),
 	python_requires= '>= 3.6',
 	install_requires = [
-		"flask",
-        "requests"
+		"flask==1.1.1",
+    	"requests==2.22.0",
+		"PyJWT==2.3.0"
 	]
 )
