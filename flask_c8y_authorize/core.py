@@ -91,6 +91,8 @@ class PreAuthorize:
                 (user in cls.USER_ROLES and (time.time()-cls.USER_ROLES[user]["lastAccessed"]) >= cls.cache_timeout()):
             user_info_url = "{}/user/currentUser".format(os.getenv("C8Y_BASEURL"))
             user_info = requests.get(user_info_url, headers=request.headers)
+            logging.info(f"user_info : {user_info}")
+            logging.info(f"user_info : {user_info.json()}")
             if user_info.status_code != 200:
                 return
             user_roles = []
