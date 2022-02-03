@@ -62,6 +62,9 @@ class PreAuthorize:
     def __get_user(cls):
         logging.info(f"All headers : \n {request.headers}")
         logging.info(f"Basic auth : {request.headers.get('Authorization')}")
+        logging.info(f"Cookies : {request.cookies}")
+        auth = request.cookies.get("authorization")
+        logging.info(f"auth cookie : {auth}")
         auth = request.headers.get("Authorization")
         if auth:
             auth = auth.split(" ")[-1]
