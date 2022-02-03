@@ -5,6 +5,7 @@ import os
 import base64
 import jwt
 from flask import request, Response, current_app
+import logging
 
 class PreAuthorize:
 
@@ -59,16 +60,19 @@ class PreAuthorize:
 
     @classmethod
     def __get_user(cls):
+        logging.info(f"All headers : \n {request.headers}")
         auth = request.headers.get("Authorization")
         if auth:
             auth = auth.split(" ")[-1]
             username, password = base64.b64decode(auth).decode().split(":")
             user = username.split("/", 1)[-1]
         else:
-            auth = request.cookies["authorization"]
+            auth = request.cookies.get("authorization")
+            logging.info(f"auth cookie : {auth}")
             if not auth:
                 return
             decoded_jwt = jwt.decode(auth, algorithms=["RS256"], options={"verify_signature":False})
+            logging.info(f"decoded jwt : \n {decoded_jwt}")
             user = decoded_jwt["sub"]
         return user
 
