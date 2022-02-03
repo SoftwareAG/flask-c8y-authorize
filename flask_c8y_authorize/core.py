@@ -60,26 +60,16 @@ class PreAuthorize:
 
     @classmethod
     def __get_user(cls):
-        logging.info(f"All headers : \n {request.headers}")
-        logging.info(f"Basic auth : {request.headers.get('Authorization')}")
-        logging.info(f"Cookies : {request.cookies}")
-        auth = request.cookies.get("authorization")
-        logging.info(f"auth cookie : {auth}")
         auth = request.headers.get("Authorization")
         if auth:
             auth = auth.split(" ")[-1]
-            logging.info(f"encoded auth : {auth}")
             username, password = base64.b64decode(auth).decode().split(":")
-            logging.info(f"username : {username}, password: {password}")
             user = username.split("/", 1)[-1]
         else:
-            logging.info(f"Cookies : {request.cookies}")
             auth = request.cookies.get("authorization")
-            logging.info(f"auth cookie : {auth}")
             if not auth:
-                return
+                raise Exception()
             decoded_jwt = jwt.decode(auth, algorithms=["RS256"], options={"verify_signature": False})
-            logging.info(f"decoded jwt : \n {decoded_jwt}")
             user = decoded_jwt["sub"]
         return user
 
@@ -87,15 +77,15 @@ class PreAuthorize:
     def __get_current_user_roles(cls):
         try:
             user = cls.__get_user()
-        except Exception as e:
-            logging.info(f"error >> {e}")
+        except:
             return
         if (user not in cls.USER_ROLES) or \
                 (user in cls.USER_ROLES and (time.time()-cls.USER_ROLES[user]["lastAccessed"]) >= cls.cache_timeout()):
             user_info_url = "{}/user/currentUser".format(os.getenv("C8Y_BASEURL"))
-            user_info = requests.get(user_info_url, headers=request.headers)
-            logging.info(f"user_info : {user_info}")
-            logging.info(f"user_info : {user_info.json()}")
+            headers = request.headers
+            if request.cookies.get("authorization"):
+                del headers["Authorization"]
+            user_info = requests.get(user_info_url, headers=headers)
             if user_info.status_code != 200:
                 return
             user_roles = []
