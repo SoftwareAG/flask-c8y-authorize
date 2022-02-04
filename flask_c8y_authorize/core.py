@@ -83,14 +83,11 @@ class PreAuthorize:
                 (user in cls.USER_ROLES and (time.time()-cls.USER_ROLES[user]["lastAccessed"]) >= cls.cache_timeout()):
             user_info_url = "{}/user/currentUser".format(os.getenv("C8Y_BASEURL"))
             headers = {}
-            logging.info(f"All headers : \n {request.headers}")
-            logging.info(f"Has cookie : {request.cookies.get('authorization')}")
             if request.cookies.get("authorization"):
                 headers["Cookie"] = request.cookies
                 headers["X-XSRF-TOKEN"] = request.headers["X-XSRF-TOKEN"]
             else:
                 headers["Authorization"] = request.headers["Authorization"]
-            logging.info(f"New header : {headers}")
             user_info = requests.get(user_info_url, headers=headers)
             if user_info.status_code != 200:
                 return
