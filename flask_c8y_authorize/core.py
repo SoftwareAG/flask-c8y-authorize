@@ -4,7 +4,9 @@ import requests
 import os
 import base64
 import jwt
-from flask import request, Response, current_app
+from flask import request, Response, current_app, Request
+r = Request()
+r.cookies
 
 class PreAuthorize:
 
@@ -83,7 +85,7 @@ class PreAuthorize:
             user_info_url = "{}/user/currentUser".format(os.getenv("C8Y_BASEURL"))
             headers = {}
             if request.cookies.get("authorization") and "X-XSRF-TOKEN" in request.headers:
-                headers["Cookie"] = request.cookies
+                headers["Cookie"] = dict(request.cookies)
                 headers["X-XSRF-TOKEN"] = request.headers["X-XSRF-TOKEN"]
             else:
                 headers["Authorization"] = request.headers["Authorization"]
