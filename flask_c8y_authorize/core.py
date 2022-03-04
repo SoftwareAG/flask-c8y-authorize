@@ -83,11 +83,12 @@ class PreAuthorize:
             user_info_url = "{}/user/currentUser".format(os.getenv("C8Y_BASEURL"))
             headers = {}
             if request.cookies.get("authorization") and "X-XSRF-TOKEN" in request.headers:
-                headers["Cookie"] = dict(request.cookies)
+                # headers["Cookie"] = dict(request.cookies)
                 headers["X-XSRF-TOKEN"] = request.headers["X-XSRF-TOKEN"]
+                user_info = requests.get(user_info_url, headers=headers, cookies=dict(request.cookies))
             else:
                 headers["Authorization"] = request.headers["Authorization"]
-            user_info = requests.get(user_info_url, headers=headers)
+                user_info = requests.get(user_info_url, headers=headers)
             if user_info.status_code != 200:
                 return
             user_roles = []
